@@ -1,11 +1,15 @@
 package br.com.contmatic.prova.util;
 
-import br.com.contmatic.prova.constantes.DocumentoConstantes;
-import br.com.contmatic.prova.constantes.ValidacaoConstantes;
+import br.com.contmatic.prova.constants.ValidacaoConstants;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public final class ValidacaoUtil {
-    private ValidacaoUtil() { }
+    private ValidacaoUtil() {}
+
     public static void exigirTexto(String valor, String mensagem) {
         if (valor == null || valor.isBlank()) {
             throw new IllegalArgumentException(mensagem);
@@ -13,24 +17,33 @@ public final class ValidacaoUtil {
     }
 
     public static void exigirNaoNegativo(BigDecimal valor, String mensagem) {
-        if (valor != null && valor.compareTo(BigDecimal.ZERO) < ValidacaoConstantes.VALOR_ZERO) {
+        if (valor != null && valor.compareTo(BigDecimal.ZERO) < ValidacaoConstants.VALOR_ZERO) {
             throw new IllegalArgumentException(mensagem);
         }
     }
 
-    @Override
-    public boolean equals(Object objeto) {
-        return super.equals(objeto);
+    public static void exigirFormato(String valor, String padrao, String mensagem) {
+        if (!valor.matches(padrao)) {
+            throw new IllegalArgumentException(mensagem);
+        }
     }
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+
+    public static void exigirDataNaoFutura(LocalDate data, LocalDate hoje, String mensagem) {
+        if (data != null && data.isAfter(hoje)) {
+            throw new IllegalArgumentException(mensagem);
+        }
     }
-    @Override
-    public String toString() {
-        return new StringBuilder(getClass().getSimpleName())
-                .append(DocumentoConstantes.ABRE_CHAVE)
-                .append(DocumentoConstantes.FECHA_CHAVE)
-                .toString();
+
+    public static void exigirDatasOrdenadas(
+            LocalDateTime criacao, LocalDateTime alteracao, String mensagem) {
+        if (criacao != null && alteracao != null && alteracao.isBefore(criacao)) {
+            throw new IllegalArgumentException(mensagem);
+        }
+    }
+
+    public static void exigirElementosNaoNulos(List<?> valores, String mensagem) {
+        if (valores.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException(mensagem);
+        }
     }
 }

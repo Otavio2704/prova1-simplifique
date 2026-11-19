@@ -1,51 +1,73 @@
 package br.com.contmatic.prova.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Constructor;
+import br.com.contmatic.prova.constants.AuditoriaConstants;
+import br.com.contmatic.prova.constants.DocumentoConstants;
+import br.com.contmatic.prova.constants.EmpresaConstants;
+import br.com.contmatic.prova.constants.EnderecoConstants;
+import br.com.contmatic.prova.constants.TelefoneConstants;
+import br.com.contmatic.prova.constants.ValidacaoConstants;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.lang.reflect.Modifier;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-
-import br.com.contmatic.prova.constantes.AuditoriaConstantes;
-import br.com.contmatic.prova.constantes.DocumentoConstantes;
-import br.com.contmatic.prova.constantes.EmpresaConstantes;
-import br.com.contmatic.prova.constantes.EnderecoConstantes;
-import br.com.contmatic.prova.constantes.TelefoneConstantes;
-import br.com.contmatic.prova.constantes.ValidacaoConstantes;
+import java.util.Arrays;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 class ClassesDeApoioTest {
-    @Test
-    void deve_manter_construtores_privados_e_metodos_de_objeto() throws Exception {
-        List<Class<?>> classes = List.of(AuditoriaConstantes.class, DocumentoConstantes.class,
-                EmpresaConstantes.class, EnderecoConstantes.class, TelefoneConstantes.class, ValidacaoConstantes.class,
-                CnpjUtil.class, CpfUtil.class, ValidacaoUtil.class);
-        for (Class<?> tipo : classes) {
-            Constructor<?> construtor = tipo.getDeclaredConstructor();
-            assertTrue(Modifier.isPrivate(construtor.getModifiers()));
-            assertEquals(tipo, tipo.getDeclaredMethod("equals", Object.class).getDeclaringClass());
-            assertEquals(tipo, tipo.getDeclaredMethod("hashCode").getDeclaringClass());
-            assertEquals(tipo, tipo.getDeclaredMethod("toString").getDeclaringClass());
-            // Apenas neste teste: reflexão permite verificar classes não instanciáveis normalmente.
-            construtor.setAccessible(true);
-            Object primeiro = construtor.newInstance();
-            Object segundo = construtor.newInstance();
-            assertTrue(primeiro.equals(primeiro));
-            assertFalse(primeiro.equals(segundo));
-            assertNotEquals(primeiro, segundo);
-            assertEquals(primeiro.hashCode(), primeiro.hashCode());
-            assertEquals(tipo.getSimpleName() + "{}", primeiro.toString());
-        }
+    static Stream<Class<?>> classesDeApoio() {
+        return Stream.of(
+                AuditoriaConstants.class,
+                DocumentoConstants.class,
+                EmpresaConstants.class,
+                EnderecoConstants.class,
+                TelefoneConstants.class,
+                ValidacaoConstants.class,
+                CnpjUtil.class,
+                CpfUtil.class,
+                ValidacaoUtil.class);
     }
-    @Test
-    void deve_proteger_os_pesos_de_documentos_contra_alteracoes_externas() {
-        int[] pesos = DocumentoConstantes.cpfPesosPrimeiro();
-        int primeiroPeso = pesos[0];
-        pesos[0] = -1;
-        assertEquals(primeiroPeso, DocumentoConstantes.cpfPesosPrimeiro()[0]);
+
+    @ParameterizedTest
+    @MethodSource("classesDeApoio")
+    void deve_manter_construtor_privado(Class<?> tipo) throws Exception {
+        assertTrue(Modifier.isPrivate(tipo.getDeclaredConstructor().getModifiers()));
+    }
+
+    static Stream<Arguments> pesosDeDocumentos() {
+        return Stream.of(
+                Arguments.of(
+                        "CPF primeiro dígito",
+                        (Supplier<int[]>) DocumentoConstants::cpfPesosPrimeiro,
+                        new int[] {10, 9, 8, 7, 6, 5, 4, 3, 2}),
+                Arguments.of(
+                        "CPF segundo dígito",
+                        (Supplier<int[]>) DocumentoConstants::cpfPesosSegundo,
+                        new int[] {11, 10, 9, 8, 7, 6, 5, 4, 3, 2}),
+                Arguments.of(
+                        "CNPJ primeiro dígito",
+                        (Supplier<int[]>) DocumentoConstants::cnpjPesosPrimeiro,
+                        new int[] {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}),
+                Arguments.of(
+                        "CNPJ segundo dígito",
+                        (Supplier<int[]>) DocumentoConstants::cnpjPesosSegundo,
+                        new int[] {6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("pesosDeDocumentos")
+    void deve_proteger_pesos_de_documentos_contra_alteracoes_externas(
+            String descricao, Supplier<int[]> obterPesos, int[] esperado) {
+        int[] primeiraCopia = obterPesos.get();
+        int[] segundaCopia = obterPesos.get();
+        assertNotSame(primeiraCopia, segundaCopia, descricao);
+        assertArrayEquals(esperado, primeiraCopia, descricao);
+        Arrays.fill(primeiraCopia, -1);
+        assertArrayEquals(esperado, segundaCopia, descricao);
+        assertArrayEquals(esperado, obterPesos.get(), descricao);
     }
 }

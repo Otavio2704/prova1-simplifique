@@ -1,13 +1,16 @@
 package br.com.contmatic.prova.model;
 
-import java.util.Objects;
-import br.com.contmatic.prova.constantes.EmpresaConstantes;
+import br.com.contmatic.prova.constants.EmpresaConstants;
+import br.com.contmatic.prova.util.CnpjUtil;
 import br.com.contmatic.prova.util.ValidacaoUtil;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import br.com.contmatic.prova.util.CnpjUtil;
+import java.util.Objects;
+import java.util.Set;
 
 public class Empresa {
     private String cnpj;
@@ -16,46 +19,55 @@ public class Empresa {
     private LocalDate dataFundacao;
     private Boolean ativa;
     private List<Telefone> telefones = new ArrayList<>();
+    private Set<String> atividades = new HashSet<>();
     private Endereco endereco;
     private Auditoria auditoria;
 
     public String getCnpj() {
         return cnpj;
     }
+
     public void setCnpj(String cnpj) {
-        ValidacaoUtil.exigirTexto(cnpj, EmpresaConstantes.CNPJ_OBRIGATORIO);
-        if (!CnpjUtil.valido(cnpj)) {
-            throw new IllegalArgumentException(EmpresaConstantes.CNPJ_INVALIDO);
+        ValidacaoUtil.exigirTexto(cnpj, EmpresaConstants.CNPJ_OBRIGATORIO);
+        String cnpjNormalizado = CnpjUtil.normalizarSeValido(cnpj);
+        if (cnpjNormalizado == null) {
+            throw new IllegalArgumentException(EmpresaConstants.CNPJ_INVALIDO);
         }
-        this.cnpj = CnpjUtil.normalizar(cnpj);
+        this.cnpj = cnpjNormalizado;
     }
 
     public String getRazaoSocial() {
         return razaoSocial;
     }
+
     public void setRazaoSocial(String razaoSocial) {
-        ValidacaoUtil.exigirTexto(razaoSocial, EmpresaConstantes.RAZAOSOCIAL_OBRIGATORIO);
+        ValidacaoUtil.exigirTexto(razaoSocial, EmpresaConstants.RAZAOSOCIAL_OBRIGATORIO);
         this.razaoSocial = razaoSocial;
     }
 
     public BigDecimal getCapitalSocial() {
         return capitalSocial;
     }
+
     public void setCapitalSocial(BigDecimal capitalSocial) {
-        ValidacaoUtil.exigirNaoNegativo(capitalSocial, EmpresaConstantes.CAPITAL_INVALIDO);
+        ValidacaoUtil.exigirNaoNegativo(capitalSocial, EmpresaConstants.CAPITAL_INVALIDO);
         this.capitalSocial = capitalSocial;
     }
 
     public LocalDate getDataFundacao() {
         return dataFundacao;
     }
+
     public void setDataFundacao(LocalDate dataFundacao) {
+        ValidacaoUtil.exigirDataNaoFutura(
+                dataFundacao, LocalDate.now(), EmpresaConstants.DATA_FUNDACAO_FUTURA);
         this.dataFundacao = dataFundacao;
     }
 
     public Boolean getAtiva() {
         return ativa;
     }
+
     public void setAtiva(Boolean ativa) {
         this.ativa = ativa;
     }
@@ -63,13 +75,25 @@ public class Empresa {
     public List<Telefone> getTelefones() {
         return new ArrayList<>(telefones);
     }
+
     public void setTelefones(List<Telefone> telefones) {
-        this.telefones = telefones == null ? new ArrayList<>() : new ArrayList<>(telefones);
+        List<Telefone> copia = telefones == null ? new ArrayList<>() : new ArrayList<>(telefones);
+        ValidacaoUtil.exigirElementosNaoNulos(copia, EmpresaConstants.TELEFONE_NULO);
+        this.telefones = copia;
+    }
+
+    public Set<String> getAtividades() {
+        return new HashSet<>(atividades);
+    }
+
+    public void setAtividades(Set<String> atividades) {
+        this.atividades = atividades == null ? new HashSet<>() : new HashSet<>(atividades);
     }
 
     public Endereco getEndereco() {
         return endereco;
     }
+
     public void setEndereco(Endereco endereco) {
         this.endereco = endereco;
     }
@@ -77,6 +101,7 @@ public class Empresa {
     public Auditoria getAuditoria() {
         return auditoria;
     }
+
     public void setAuditoria(Auditoria auditoria) {
         this.auditoria = auditoria;
     }
@@ -89,21 +114,34 @@ public class Empresa {
         // CNPJ não informado não identifica empresas distintas como iguais.
         return cnpj != null && cnpj.equals(outro.cnpj);
     }
+
     @Override
     public int hashCode() {
         return Objects.hashCode(cnpj);
     }
+
     @Override
     public String toString() {
-        return new StringBuilder(EmpresaConstantes.TOSTRING_INICIO)
-                .append(EmpresaConstantes.TOSTRING_CNPJ).append(cnpj)
-                .append(EmpresaConstantes.TOSTRING_RAZAOSOCIAL).append(razaoSocial)
-                .append(EmpresaConstantes.TOSTRING_CAPITALSOCIAL).append(capitalSocial)
-                .append(EmpresaConstantes.TOSTRING_DATAFUNDACAO).append(dataFundacao)
-                .append(EmpresaConstantes.TOSTRING_ATIVA).append(ativa)
-                .append(EmpresaConstantes.TOSTRING_TELEFONES).append(telefones)
-                .append(EmpresaConstantes.TOSTRING_ENDERECO).append(endereco)
-                .append(EmpresaConstantes.TOSTRING_AUDITORIA).append(auditoria)
-                .append(EmpresaConstantes.TOSTRING_FIM).toString();
+        return new StringBuilder(EmpresaConstants.TOSTRING_INICIO)
+                .append(EmpresaConstants.TOSTRING_CNPJ)
+                .append(cnpj)
+                .append(EmpresaConstants.TOSTRING_RAZAOSOCIAL)
+                .append(razaoSocial)
+                .append(EmpresaConstants.TOSTRING_CAPITALSOCIAL)
+                .append(capitalSocial)
+                .append(EmpresaConstants.TOSTRING_DATAFUNDACAO)
+                .append(dataFundacao)
+                .append(EmpresaConstants.TOSTRING_ATIVA)
+                .append(ativa)
+                .append(EmpresaConstants.TOSTRING_TELEFONES)
+                .append(telefones)
+                .append(EmpresaConstants.TOSTRING_ATIVIDADES)
+                .append(atividades)
+                .append(EmpresaConstants.TOSTRING_ENDERECO)
+                .append(endereco)
+                .append(EmpresaConstants.TOSTRING_AUDITORIA)
+                .append(auditoria)
+                .append(EmpresaConstants.TOSTRING_FIM)
+                .toString();
     }
 }

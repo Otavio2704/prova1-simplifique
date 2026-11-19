@@ -1,39 +1,101 @@
 package br.com.contmatic.prova.model;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
+
 class ContratosTest {
-    @Test void deve_respeitar_contratos_de_igualdade() {
-        Empresa primeira = new Empresa(); primeira.setCnpj("11222333000181");
-        Empresa segunda = new Empresa(); segunda.setCnpj("11222333000181");
-        verificar(primeira, segunda, new Endereco());
-        verificar(new Endereco(), new Endereco(), new Telefone());
-        verificar(new Telefone(), new Telefone(), new Auditoria());
-        verificar(new Auditoria(), new Auditoria(), new Empresa());
-    }
-    private void verificar(Object a, Object b, Object outroTipo) {
-        assertEquals(a, a); assertEquals(a, b); assertEquals(b, a);
+    private void verificarContrato(Object a, Object b, Object outroTipo) {
+        assertTrue(a.equals(a));
+        assertEquals(a, b);
+        assertEquals(b, a);
         assertEquals(a.hashCode(), b.hashCode());
-        assertNotEquals(a, null); assertNotEquals(a, outroTipo);
+        assertFalse(a.equals(null));
+        assertFalse(a.equals(outroTipo));
         assertNotNull(a.toString());
     }
-    @Test void deve_exibir_os_atributos_no_to_string() {
+
+    @Test
+    void deve_respeitar_contrato_de_igualdade_de_empresa() {
+        Empresa a = new Empresa();
+        a.setCnpj("11222333000181");
+        Empresa b = new Empresa();
+        b.setCnpj("11222333000181");
+        verificarContrato(a, b, new Endereco());
+    }
+
+    @Test
+    void deve_respeitar_contrato_de_igualdade_de_endereco() {
+        verificarContrato(new Endereco(), new Endereco(), new Telefone());
+    }
+
+    @Test
+    void deve_respeitar_contrato_de_igualdade_de_telefone() {
+        verificarContrato(new Telefone(), new Telefone(), new Auditoria());
+    }
+
+    @Test
+    void deve_respeitar_contrato_de_igualdade_de_auditoria() {
+        verificarContrato(new Auditoria(), new Auditoria(), new Empresa());
+    }
+
+    @Test
+    void deve_exibir_razao_social_no_to_string_de_empresa() {
         Empresa empresa = new Empresa();
         empresa.setRazaoSocial("Padaria");
         assertTrue(empresa.toString().contains("razaoSocial=Padaria"));
+    }
+
+    @Test
+    void deve_exibir_cidade_no_to_string_de_endereco() {
         Endereco endereco = new Endereco();
         endereco.setCidade("Suzano");
         assertTrue(endereco.toString().contains("cidade=Suzano"));
+    }
+
+    @Test
+    void deve_exibir_ddd_no_to_string_de_telefone() {
         Telefone telefone = new Telefone();
         telefone.setDdd("11");
         assertTrue(telefone.toString().contains("ddd=11"));
+    }
+
+    @Test
+    void deve_exibir_criador_no_to_string_de_auditoria() {
         Auditoria auditoria = new Auditoria();
         auditoria.setCriadoPor("Ana");
         assertTrue(auditoria.toString().contains("criadoPor=Ana"));
     }
-    @Test void nao_deve_igualar_objetos_com_dados_diferentes() {
-        Empresa e1 = new Empresa(); Empresa e2 = new Empresa(); e1.setRazaoSocial("Uma"); assertNotEquals(e1, e2);
-        Endereco d1 = new Endereco(); Endereco d2 = new Endereco(); d1.setCidade("Suzano"); assertNotEquals(d1, d2);
-        Telefone t1 = new Telefone(); Telefone t2 = new Telefone(); t1.setDdd("11"); assertNotEquals(t1, t2);
-        Auditoria a1 = new Auditoria(); Auditoria a2 = new Auditoria(); a1.setCriadoPor("Ana"); assertNotEquals(a1, a2);
+
+    @Test
+    void nao_deve_igualar_empresas_com_cnpj_diferente() {
+        Empresa a = new Empresa();
+        a.setCnpj("11222333000181");
+        a.setRazaoSocial("Uma");
+        Empresa b = new Empresa();
+        b.setCnpj("12ABC34501DE35");
+        b.setRazaoSocial("Uma");
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    void nao_deve_igualar_enderecos_com_cidade_diferente() {
+        Endereco a = new Endereco();
+        a.setCidade("Suzano");
+        assertNotEquals(a, new Endereco());
+    }
+
+    @Test
+    void nao_deve_igualar_telefones_com_ddd_diferente() {
+        Telefone a = new Telefone();
+        a.setDdd("11");
+        assertNotEquals(a, new Telefone());
+    }
+
+    @Test
+    void nao_deve_igualar_auditorias_com_criador_diferente() {
+        Auditoria a = new Auditoria();
+        a.setCriadoPor("Ana");
+        assertNotEquals(a, new Auditoria());
     }
 }
